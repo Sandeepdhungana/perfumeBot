@@ -48,4 +48,122 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+    import sys
+    import platform
+    
+    # Check if running on Windows
+    is_windows = platform.system() == "Windows"
+    
+    if is_windows:
+        # Windows-specific configuration (single worker with threading)
+        print("Running on Windows - using single worker with threading optimization")
+        uvicorn.run(
+            "server:app", 
+            host="0.0.0.0", 
+            port=8000, 
+            workers=1,  # Single worker for Windows compatibility
+            reload=False,
+            access_log=True,
+            log_level="info",
+            # Enable threading within single worker
+            loop="asyncio",
+            # Use threading for better concurrency on Windows
+            log_config={
+                "version": 1,
+                "disable_existing_loggers": False,
+                "formatters": {
+                    "default": {
+                        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                    },
+                },
+                "handlers": {
+                    "default": {
+                        "formatter": "default",
+                        "class": "logging.FileHandler",
+                        "filename": "uvicorn.log",
+                        "mode": "a",
+                    },
+                    "console": {
+                        "formatter": "default",
+                        "class": "logging.StreamHandler",
+                        "stream": "ext://sys.stdout",
+                    },
+                },
+                "root": {
+                    "level": "INFO",
+                    "handlers": ["console", "default"]
+                },
+                "loggers": {
+                    "uvicorn": {
+                        "level": "INFO",
+                        "handlers": ["console", "default"], 
+                        "propagate": False
+                    },
+                    "uvicorn.access": {
+                        "level": "INFO", 
+                        "handlers": ["console", "default"], 
+                        "propagate": False
+                    },
+                    "uvicorn.error": {
+                        "level": "INFO",
+                        "handlers": ["console", "default"], 
+                        "propagate": False
+                    }
+                }
+            }
+        )
+    else:
+        # Unix/Linux configuration (multi-worker)
+        print("Running on Unix/Linux - using multi-worker configuration")
+        uvicorn.run(
+            "server:app", 
+            host="0.0.0.0", 
+            port=8000, 
+            workers=4,  # Multiple workers for Unix/Linux
+            reload=False,
+            access_log=True,
+            log_level="info",
+            log_config={
+                "version": 1,
+                "disable_existing_loggers": False,
+                "formatters": {
+                    "default": {
+                        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                    },
+                },
+                "handlers": {
+                    "default": {
+                        "formatter": "default",
+                        "class": "logging.FileHandler",
+                        "filename": "uvicorn.log",
+                        "mode": "a",
+                    },
+                    "console": {
+                        "formatter": "default",
+                        "class": "logging.StreamHandler",
+                        "stream": "ext://sys.stdout",
+                    },
+                },
+                "root": {
+                    "level": "INFO",
+                    "handlers": ["console", "default"]
+                },
+                "loggers": {
+                    "uvicorn": {
+                        "level": "INFO",
+                        "handlers": ["console", "default"], 
+                        "propagate": False
+                    },
+                    "uvicorn.access": {
+                        "level": "INFO", 
+                        "handlers": ["console", "default"], 
+                        "propagate": False
+                    },
+                    "uvicorn.error": {
+                        "level": "INFO",
+                        "handlers": ["console", "default"], 
+                        "propagate": False
+                    }
+                }
+            }
+        )

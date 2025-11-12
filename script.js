@@ -1,12 +1,24 @@
 class PerfumeChatbot {
     constructor() {
         this.conversationId = null;
+        this.deviceId = this.getOrCreateDeviceId();
         this.isLoading = false;
         this.currentPerfumes = [];
         this.remainingCount = 0;
         
         this.initializeElements();
         this.attachEventListeners();
+    }
+    
+    getOrCreateDeviceId() {
+        // Check if device ID exists in localStorage
+        let deviceId = localStorage.getItem('perfume_chatbot_device_id');
+        if (!deviceId) {
+            // Generate a new device ID using timestamp + random number
+            deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('perfume_chatbot_device_id', deviceId);
+        }
+        return deviceId;
     }
     
     initializeElements() {
@@ -65,7 +77,8 @@ class PerfumeChatbot {
                 },
                 body: JSON.stringify({
                     message: message,
-                    conversation_id: this.conversationId
+                    conversation_id: this.conversationId,
+                    device_id: this.deviceId
                 })
             });
             
@@ -215,7 +228,8 @@ class PerfumeChatbot {
                 },
                 body: JSON.stringify({
                     message: 'show more',
-                    conversation_id: this.conversationId
+                    conversation_id: this.conversationId,
+                    device_id: this.deviceId
                 })
             });
             
@@ -257,7 +271,7 @@ class PerfumeChatbot {
         
         try {
             const encodedName = encodeURIComponent(perfumeName);
-            const response = await fetch(`/api/perfume/${encodedName}`);
+            const response = await fetch(`/api/perfume/${encodedName}?device_id=${encodeURIComponent(this.deviceId)}`);
             
             console.log('Perfume details response status:', response.status);
             

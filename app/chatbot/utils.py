@@ -18,43 +18,83 @@ def get_openai_client():
         raise ValueError("OPENAI_API_KEY not found in environment variables")
     return OpenAI(api_key=api_key)
 
-def _read_intermediate():
+def _read_intermediate(device_id: str = "default"):
     if not os.path.exists(INTERMEDIATE_FILE):
         return []
     try:
         with open(INTERMEDIATE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            # Handle legacy format (array) vs new format (device-specific object)
+            if isinstance(data, list):
+                return data if device_id == "default" else []
+            return data.get(device_id, [])
     except Exception:
         return []
 
-def _write_intermediate(data_list):
+def _write_intermediate(data_list, device_id: str = "default"):
+    # Read existing data
+    existing_data = {}
+    if os.path.exists(INTERMEDIATE_FILE):
+        try:
+            with open(INTERMEDIATE_FILE, "r", encoding="utf-8") as f:
+                existing_data = json.load(f)
+                # Handle legacy format conversion
+                if isinstance(existing_data, list):
+                    existing_data = {"default": existing_data}
+        except Exception:
+            existing_data = {}
+    
+    # Update data for this device
+    existing_data[device_id] = data_list
+    
+    # Write back to file
     with open(INTERMEDIATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(data_list, f, indent=2, ensure_ascii=False)
+        json.dump(existing_data, f, indent=2, ensure_ascii=False)
 
-def _read_pagination_state():
+def _read_pagination_state(device_id: str = "default"):
     if not os.path.exists(PAGINATION_FILE):
         return {"offset": 0, "total_results": 0}
     try:
         with open(PAGINATION_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            # Handle legacy format (object) vs new format (device-specific object)
+            if "offset" in data and "total_results" in data:
+                return data if device_id == "default" else {"offset": 0, "total_results": 0}
+            return data.get(device_id, {"offset": 0, "total_results": 0})
     except Exception:
         return {"offset": 0, "total_results": 0}
 
-def _write_pagination_state(offset: int, total_results: int):
+def _write_pagination_state(offset: int, total_results: int, device_id: str = "default"):
+    # Read existing data
+    existing_data = {}
+    if os.path.exists(PAGINATION_FILE):
+        try:
+            with open(PAGINATION_FILE, "r", encoding="utf-8") as f:
+                existing_data = json.load(f)
+                # Handle legacy format conversion
+                if "offset" in existing_data and "total_results" in existing_data:
+                    existing_data = {"default": existing_data}
+        except Exception:
+            existing_data = {}
+    
+    # Update state for this device
     state = {"offset": offset, "total_results": total_results}
+    existing_data[device_id] = state
+    
+    # Write back to file
     with open(PAGINATION_FILE, "w", encoding="utf-8") as f:
-        json.dump(state, f, indent=2)
+        json.dump(existing_data, f, indent=2)
 
-def get_next_results(count: int = 5):
+def get_next_results(count: int = 5, device_id: str = "default"):
     """
     Fetch the next `count` results using pagination offset instead of removing items.
     """
-    # Get current pagination state
-    pagination_state = _read_pagination_state()
+    # Get current pagination state for this device
+    pagination_state = _read_pagination_state(device_id)
     offset = pagination_state["offset"]
     
-    # Get all results
-    all_results = _read_intermediate()
+    # Get all results for this device
+    all_results = _read_intermediate(device_id)
     
     if not all_results or offset >= len(all_results):
         return []
@@ -65,39 +105,39 @@ def get_next_results(count: int = 5):
     
     # Update pagination state - advance the offset
     new_offset = end_index
-    _write_pagination_state(new_offset, len(all_results))
+    _write_pagination_state(new_offset, len(all_results), device_id)
     
     return batch
 
-def reset_pagination():
-    """Reset pagination to start from beginning."""
-    _write_pagination_state(0, 0)
+def reset_pagination(device_id: str = "default"):
+    """Reset pagination to start from beginning for specific device."""
+    _write_pagination_state(0, 0, device_id)
 
-def get_remaining_count():
-    """Get the number of remaining results."""
-    pagination_state = _read_pagination_state()
-    all_results = _read_intermediate()
+def get_remaining_count(device_id: str = "default"):
+    """Get the number of remaining results for specific device."""
+    pagination_state = _read_pagination_state(device_id)
+    all_results = _read_intermediate(device_id)
     
     if not all_results:
         return 0
     
     return max(0, len(all_results) - pagination_state["offset"])
 
-def store_search_results(results: List[Dict[str, Any]], page_size: int = 5):
+def store_search_results(results: List[Dict[str, Any]], page_size: int = 5, device_id: str = "default"):
     """
-    Store search results and return first page.
+    Store search results and return first page for specific device.
     """
-    # Store all results
-    _write_intermediate(results)
+    # Store all results for this device
+    _write_intermediate(results, device_id)
     
-    # Reset pagination to start
-    reset_pagination()
+    # Reset pagination to start for this device
+    reset_pagination(device_id)
     
     # Get first page
     first_batch = results[:page_size]
     
-    # Set pagination state after first page
-    _write_pagination_state(page_size, len(results))
+    # Set pagination state after first page for this device
+    _write_pagination_state(page_size, len(results), device_id)
     
     return first_batch
 
@@ -165,8 +205,8 @@ def search_perfumes(filters: Dict[str, Any]) -> List[Dict[str, Any]]:
 def get_conversation(conversation_id: str) -> List[Dict[str, Any]]:
     """Get conversation history for a given ID."""
     if conversation_id not in conversation_states:
-        # Reset pagination for new conversations
-        reset_pagination()
+        # Note: reset_pagination is now device-specific, but we don't have device_id here
+        # This will be handled in routes.py when device_id is available
         conversation_states[conversation_id] = [
             {"role": "system", "content": """
             You are a perfume recommendation assistant.
@@ -203,10 +243,10 @@ def update_conversation(conversation_id: str, conversation: List[Dict[str, Any]]
     """Update conversation history."""
     conversation_states[conversation_id] = conversation
 
-def get_perfume_details_by_name(perfume_name: str) -> Dict[str, Any]:
+def get_perfume_details_by_name(perfume_name: str, device_id: str = "default") -> Dict[str, Any]:
     """Get detailed information for a specific perfume by name."""
-    # First check intermediate.json
-    all_results = _read_intermediate()
+    # First check intermediate.json for this device
+    all_results = _read_intermediate(device_id)
     for perfume in all_results:
         if perfume.get("Name", "").lower() == perfume_name.lower():
             return perfume

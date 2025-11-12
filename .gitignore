@@ -15,3 +15,5 @@ README.md
 PAGINATION.md
 test_pagination.py
 newfile/
+uvicorn.log
+uvicorn.access.log

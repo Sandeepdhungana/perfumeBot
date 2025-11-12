@@ -4,6 +4,7 @@ from typing import Optional, List
 class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None
+    device_id: Optional[str] = "default"
 
 class ChatResponse(BaseModel):
     response: str

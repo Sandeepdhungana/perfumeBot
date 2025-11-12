@@ -1,4 +1,18 @@
 {
-  "offset": 5,
-  "total_results": 18491
+  "default": {
+    "offset": 5,
+    "total_results": 18491
+  },
+  "device_1762959909221_i32vwyzn4": {
+    "offset": 15,
+    "total_results": 12223
+  },
+  "device_1762960221198_4x5nd71og": {
+    "offset": 5,
+    "total_results": 85
+  },
+  "device_1762960082519_x0dftanv6": {
+    "offset": 5,
+    "total_results": 0
+  }
 }

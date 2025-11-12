@@ -11,7 +11,8 @@ from .utils import (
     store_search_results,
     get_remaining_count,
     reset_pagination,
-    get_perfume_details_by_name
+    get_perfume_details_by_name,
+    conversation_states
 )
 
 router = APIRouter()
@@ -22,6 +23,11 @@ async def chat_endpoint(request: ChatRequest):
     try:
         # Create conversation ID if not provided
         conversation_id = request.conversation_id or create_conversation_id()
+        device_id = request.device_id or "default"
+        
+        # Reset pagination for new conversations specific to this device
+        if conversation_id not in conversation_states:
+            reset_pagination(device_id)
         
         # Get conversation history
         conversation = get_conversation(conversation_id)
@@ -90,9 +96,9 @@ async def chat_endpoint(request: ChatRequest):
             if func_name == "search_perfumes":
                 results = search_perfumes(args)
                 
-                # Use new pagination system - store results and get first page
-                first_batch = store_search_results(results, page_size=5)
-                remaining_count = get_remaining_count()
+                # Use new pagination system - store results and get first page for this device
+                first_batch = store_search_results(results, page_size=5, device_id=device_id)
+                remaining_count = get_remaining_count(device_id)
                 
                 matched_perfumes = [p["Name"] for p in first_batch]
                 returned_count = len(first_batch)
@@ -110,10 +116,10 @@ async def chat_endpoint(request: ChatRequest):
                 
             elif func_name == "get_next_results":
                 count = int(args.get("count", 5))
-                next_batch = get_next_results(count)
+                next_batch = get_next_results(count, device_id)
                 matched_perfumes = [p["Name"] for p in next_batch]
                 returned_count = len(next_batch)
-                remaining_count = get_remaining_count()
+                remaining_count = get_remaining_count(device_id)
                 
                 tool_response = {
                     "role": "tool",
@@ -133,7 +139,7 @@ async def chat_endpoint(request: ChatRequest):
                     "content": json.dumps({
                         "matched_perfumes": [], 
                         "returned_count": 0, 
-                        "remaining_count": get_remaining_count()
+                        "remaining_count": get_remaining_count(device_id)
                     })
                 }
                 conversation.append(tool_response)
@@ -171,10 +177,10 @@ async def chat_endpoint(request: ChatRequest):
         raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
 
 @router.get("/perfume/{perfume_name}", response_model=PerfumeDetails)
-async def get_perfume_details(perfume_name: str):
+async def get_perfume_details(perfume_name: str, device_id: str = "default"):
     """Get detailed information for a specific perfume by name."""
     try:
-        details = get_perfume_details_by_name(perfume_name)
+        details = get_perfume_details_by_name(perfume_name, device_id)
         if not details:
             raise HTTPException(status_code=404, detail=f"Perfume '{perfume_name}' not found")
         
