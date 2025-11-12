@@ -1,0 +1,17 @@
+.env
+*.csv
+.test
+.cenv
+fra_cleaned.csv
+fra_perfumes.csv
+query_db.py
+result.json
+save_to_db.py
+save_to_json.py
+perfumes.json
+intermediate.json
+__pycache__/
+README.md
+PAGINATION.md
+test_pagination.py
+newfile/

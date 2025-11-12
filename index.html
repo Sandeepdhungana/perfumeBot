@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfume Chatbot - Your Personal Fragrance Assistant</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-spray-can"></i>
+                    <h1>FragranceBot</h1>
+                </div>
+                <p class="subtitle">Your AI-powered perfume recommendation assistant</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="status-indicator">
+                        <div class="status-dot online"></div>
+                        <span>Online</span>
+                    </div>
+                    <button class="clear-chat-btn" id="clearChat">
+                        <i class="fas fa-broom"></i>
+                        Clear Chat
+                    </button>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot-message welcome-message">
+                        <div class="message-avatar bot-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                <h3>Welcome to FragranceBot! 🌸</h3>
+                                <p>I'm here to help you discover your perfect fragrance. You can ask me about:</p>
+                                <ul>
+                                    <li>Perfumes with specific notes (citrus, floral, woody, etc.)</li>
+                                    <li>Fragrances for men or women</li>
+                                    <li>Scents by main accords</li>
+                                    <li>Similar perfumes to ones you love</li>
+                                </ul>
+                                <p>What kind of fragrance are you looking for today?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <input 
+                            type="text" 
+                            id="chatInput" 
+                            placeholder="Ask me about perfumes... (e.g., 'Show me floral perfumes for women')"
+                            autocomplete="off"
+                        >
+                        <button id="sendButton" class="send-button">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="quick-suggestions">
+                        <button class="suggestion-btn" data-message="Show me floral perfumes for women">
+                            <i class="fas fa-flower"></i> Floral for Women
+                        </button>
+                        <button class="suggestion-btn" data-message="I want woody fragrances for men">
+                            <i class="fas fa-tree"></i> Woody for Men
+                        </button>
+                        <button class="suggestion-btn" data-message="Show me citrus perfumes">
+                            <i class="fas fa-lemon"></i> Citrus Scents
+                        </button>
+                        <button class="suggestion-btn" data-message="I love vanilla and rose, what do you recommend?">
+                            <i class="fas fa-heart"></i> Sweet & Romantic
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 FragranceBot. Discover your signature scent with AI assistance.</p>
+        </footer>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Finding your perfect fragrance...</p>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
