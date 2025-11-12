@@ -8,7 +8,7 @@ class PerfumeChatbot {
         
         this.initializeElements();
         this.attachEventListeners();
-        this.url = 'http://217.216.111.69:8000/'
+        this.url = 'http://217.216.111.69:8000'
     }
     
     getOrCreateDeviceId() {
