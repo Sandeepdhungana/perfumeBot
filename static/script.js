@@ -8,6 +8,7 @@ class PerfumeChatbot {
         
         this.initializeElements();
         this.attachEventListeners();
+        this.url = 'http://217.216.111.69:8000/'
     }
     
     getOrCreateDeviceId() {
@@ -70,7 +71,7 @@ class PerfumeChatbot {
         this.setLoading(true);
         
         try {
-            const response = await fetch('/api/chat', {
+            const response = await fetch(`${this.url}/api/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -214,7 +215,7 @@ class PerfumeChatbot {
         this.setLoading(true);
         
         try {
-            const response = await fetch('/api/chat', {
+            const response = await fetch(`${this.url}/api/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -258,7 +259,7 @@ class PerfumeChatbot {
         
         try {
             const encodedName = encodeURIComponent(perfumeName);
-            const response = await fetch(`/api/perfume/${encodedName}?device_id=${encodeURIComponent(this.deviceId)}`);
+            const response = await fetch(`${this.url}/api/perfume/${encodedName}?device_id=${encodeURIComponent(this.deviceId)}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
